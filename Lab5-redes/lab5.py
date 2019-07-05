@@ -80,19 +80,22 @@ def demodular_ask(tasa_de_bits, m_ask):
 	j = 0
 	i = 0
 	while i < len(m_ask):
-		if abs(m_ask[i]) < portadora1[j] + 10 and abs(m_ask[i]) > portadora1[j] - 10:
+		if abs(m_ask[i]) < portadora1[j] + 2 and abs(m_ask[i]) > portadora1[j] - 2:
 			while j < len(portadora1):
 				dem_ask.append(m_ask[i]*portadora1[j])
 				j = j + 1
 				i = i + 1
 			j = 0
-		elif abs(m_ask[i]) < portadora2[j] + 10 and abs(m_ask[i]) > portadora2[j] - 10:
+		elif abs(m_ask[i]) < portadora2[j] + 2 and abs(m_ask[i]) > portadora2[j] - 2:
 			while j < len(portadora2):
 				dem_ask.append(m_ask[i]*portadora2[j])
 				j = j + 1
 				i = i + 1
 		
 			j = 0
+	pyplot.plot(dem_ask)
+	pyplot.title("modulada*modulada")
+	pyplot.show()
 	i = 0
 	while  i < len(dem_ask):
 		if dem_ask[i] >  40:
@@ -121,7 +124,7 @@ def ruido(m_ask,snr):
 	media = media/c_elementos
 
 	desviacion = media/snr
-	ruido = np.random.normal(media,desviacion,c_elementos)
+	ruido = np.random.normal(0,desviacion,c_elementos)
 	s_awgn = m_ask + ruido
 
 	pyplot.plot(ruido)
@@ -130,6 +133,28 @@ def ruido(m_ask,snr):
 	pyplot.title("Señal modulada ask con ruido (awgn)")
 	pyplot.show()
 	return s_awgn
+
+'''
+Entradas: s_digital_e: Señal digital que se envía para la transmisión
+		  s_digital_r: Señal digital que se recibe luego de ser aplicado el ruido
+Descripción: La función se encarga de calcular la cantidad de bits erroneos luego de ser
+			 recibidos. Para esto se recorren los dos arreglos de bits ingresados (señal digital
+			 transmitida y recibida), se cuentan aquellos que sean distintos y se dividen por la 
+			 cantidad total de bits transmitidos.
+'''
+def t_errores(s_digital_e, s_digital_r):
+
+	errores = 0
+	j = 0
+	for i in s_digital_e:
+		if s_digital_e[j] == s_digital_r:
+			errores = errores + 1
+		j = j + 1
+
+	tasa_error = errores/len(s_digital_e)
+	return tasa_error
+
+
 
 '''
 s_digital = Se genera el arreglo de bits a modular con X elementos
@@ -145,9 +170,11 @@ dem_ask = demodular_ask(tasa_de_bits,m_ask)
 
 
 digitalPlot(s_digital, m_ask,dem_ask)
-s_awgn = ruido(m_ask,1)
+s_awgn = ruido(m_ask,4)
 dem_ask2 = demodular_ask(tasa_de_bits,s_awgn)
 pyplot.stem(dem_ask2)
 pyplot.title("demodulada con ruido")
 pyplot.show()
-
+print(dem_ask)
+print(dem_ask2)
+print(t_errores(dem_ask,dem_ask2))
