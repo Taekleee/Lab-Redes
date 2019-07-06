@@ -76,34 +76,21 @@ def demodular_ask(tasa_de_bits, m_ask):
 
 	tiempo = np.linspace(0,1,tasa_de_bits)
 	portadora1 = 5*np.cos(2*np.pi*tiempo)
-	portadora2 = 20*np.cos(2*np.pi*tiempo)
+	portadora2 = 20*np.cos(2*np.pi*tiempo)	
+
+	i = 0
 	j = 0
-	i = 0
-	while i < len(m_ask):
-		if abs(m_ask[i]) < portadora1[j] + 2 and abs(m_ask[i]) > portadora1[j] - 2:
-			while j < len(portadora1):
-				dem_ask.append(m_ask[i]*portadora1[j])
-				j = j + 1
-				i = i + 1
-			j = 0
-		elif abs(m_ask[i]) < portadora2[j] + 2 and abs(m_ask[i]) > portadora2[j] - 2:
-			while j < len(portadora2):
-				dem_ask.append(m_ask[i]*portadora2[j])
-				j = j + 1
-				i = i + 1
-		
-			j = 0
-	pyplot.plot(dem_ask)
-	pyplot.title("modulada*modulada")
-	pyplot.show()
-	i = 0
-	while  i < len(dem_ask):
-		if dem_ask[i] >  40:
+	while  i < len(m_ask):
+		if m_ask[i] >=  portadora2[j]:
 			demodulada.append(1)
 		else:
 			demodulada.append(0)
 		i = i + 10
 	return demodulada
+
+
+
+
 
 
 '''
@@ -123,15 +110,18 @@ def ruido(m_ask,snr):
 		media = media + i
 	media = media/c_elementos
 
-	desviacion = media/snr
-	ruido = np.random.normal(0,desviacion,c_elementos)
+	desviacion = media/abs(snr)
+	ruido = np.random.normal(0,snr,c_elementos)
 	s_awgn = m_ask + ruido
+	'''
+	pyplot.plot(m_ask)
+	pyplot.title("Señal modulada ask sin ruido (awgn)")
 
-	pyplot.plot(ruido)
 	pyplot.show()
 	pyplot.plot(s_awgn)
 	pyplot.title("Señal modulada ask con ruido (awgn)")
 	pyplot.show()
+	'''
 	return s_awgn
 
 '''
@@ -143,16 +133,39 @@ Descripción: La función se encarga de calcular la cantidad de bits erroneos lu
 			 cantidad total de bits transmitidos.
 '''
 def t_errores(s_digital_e, s_digital_r):
-
+	i = 0
 	errores = 0
-	j = 0
-	for i in s_digital_e:
-		if s_digital_e[j] == s_digital_r:
+	while i < len(s_digital_e):
+		if(s_digital_e[i] != s_digital_r[i]):
 			errores = errores + 1
-		j = j + 1
-
+		i = i+1
+	print("errores: "  )
+	print(errores)
 	tasa_error = errores/len(s_digital_e)
 	return tasa_error
+
+'''
+Entrada: cantidad: número de elementos a generar
+Descripción: se genera un arreglo de números 0 y 1
+Salida: Arreglo de bits
+'''
+def bits_seudoAleatorios(cantidad):
+	bits = []
+	i = 0
+	while i < cantidad:
+		bits.append(randint(0,1))
+		i = i + 1
+	return bits
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -162,19 +175,41 @@ tasa_de_bits = cantidad de bits por unidad de tiempo, en este caso corresponde a
 '''
 s_digital = [1,0,1,1,0,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0,1,0,1,0,1,0,1,0,1]
 tasa_de_bits = 10
+#PARTE 1
 m_ask = modular_ask(s_digital,tasa_de_bits)
 
-
+#PARTE 2
 dem_ask = demodular_ask(tasa_de_bits,m_ask)
 
 
 
 digitalPlot(s_digital, m_ask,dem_ask)
+#PARTE 3
 s_awgn = ruido(m_ask,4)
+
+
+
+#PARTE 4 (TASA DE ERROR)
+
 dem_ask2 = demodular_ask(tasa_de_bits,s_awgn)
-pyplot.stem(dem_ask2)
-pyplot.title("demodulada con ruido")
-pyplot.show()
-print(dem_ask)
-print(dem_ask2)
 print(t_errores(dem_ask,dem_ask2))
+
+
+
+#PARTE 5
+#Generar bits aleatorios 10^6
+s_emisor = bits_seudoAleatorios(100000)
+
+#niveles de ruido
+n_ruido = [1,2,4,8,10]
+errores = []
+for i in n_ruido:
+	modulada = modular_ask(s_emisor,tasa_de_bits)
+	transmitir = ruido(modulada,i)
+	demodulada = demodular_ask(tasa_de_bits,transmitir)
+	error = t_errores(s_emisor,demodulada)
+	errores.append(error)
+print(errores)
+print(n_ruido)
+
+
