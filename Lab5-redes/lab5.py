@@ -3,6 +3,8 @@ from matplotlib import pyplot
 from random import randint, uniform,random
 import numpy as np
 from scipy.signal import butter, filtfilt, freqz
+import scipy.integrate as integrate
+
 
 #Modulación ASK
 
@@ -46,7 +48,7 @@ Salida: Señal modulada en ask (amplitud)
 '''
 def modular_ask(s_digital,tasa_de_bits):
 	m_ask = []
-	tiempo = np.linspace(0,1,tasa_de_bits)
+	tiempo = np.linspace(0,1,2*tasa_de_bits)
 	portadora1 = 5*np.cos(2*np.pi*tiempo)
 	portadora2 = 20*np.cos(2*np.pi*tiempo)
 
@@ -74,7 +76,7 @@ def demodular_ask(tasa_de_bits, m_ask):
 	dem_ask = []
 	demodulada = []
 
-	tiempo = np.linspace(0,1,tasa_de_bits)
+	tiempo = np.linspace(0,1,2*tasa_de_bits)
 	portadora1 = 5*np.cos(2*np.pi*tiempo)
 	portadora2 = 20*np.cos(2*np.pi*tiempo)	
 
@@ -102,16 +104,10 @@ Descripción: la función se encarga de añadir ruido gaussiano a la señal modu
 			 ask.
 Salida: señal ask con ruido
 '''
-def ruido(m_ask,snr):
+def ruido(m_ask,snr,energia):
 	c_elementos = len(m_ask)
-	media = 0
-
-	for i in m_ask:
-		media = media + i
-	media = media/c_elementos
-
-	desviacion = media/abs(snr)
-	ruido = np.random.normal(0,snr,c_elementos)
+	desviacion = np.sqrt(energia/(10*np.log(snr)))
+	ruido = desviacion*np.random.normal(0,1,c_elementos)
 	s_awgn = m_ask + ruido
 	'''
 	pyplot.plot(m_ask)
@@ -158,25 +154,28 @@ def bits_seudoAleatorios(cantidad):
 	return bits
 
 
-
-
-
-
-
-
-
-
-
-
+def energia(senal):
+	muestras = len(senal)
+	dt = 1/muestras
+	fin = muestras*dt
+	t = np.arange(0,fin,dt)
+	cuadrado = np.power(senal, 2)
+	energia = integrate.simps(cuadrado,t)
+	return energia
 
 '''
 s_digital = Se genera el arreglo de bits a modular con X elementos
 tasa_de_bits = cantidad de bits por unidad de tiempo, en este caso corresponde a 10 bits por segundo
 '''
-s_digital = [1,0,1,1,0,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0,1,0,1,0,1,0,1,0,1]
+#s_digital = [1,0,1,1,0,1,0,1,0,0,0,1,0,1,0,1,1,0,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,0,1,0,1,0,1,0,1,0,1]
+s_digital = [0,1,0,1,0,1,0,1,0,0,1,0,1,0,1,0,1,0,1]
 tasa_de_bits = 10
+
 #PARTE 1
 m_ask = modular_ask(s_digital,tasa_de_bits)
+print("adasd")
+print("adasd")
+
 
 #PARTE 2
 dem_ask = demodular_ask(tasa_de_bits,m_ask)
@@ -185,14 +184,14 @@ dem_ask = demodular_ask(tasa_de_bits,m_ask)
 
 digitalPlot(s_digital, m_ask,dem_ask)
 #PARTE 3
-s_awgn = ruido(m_ask,4)
+#s_awgn = ruido(m_ask,4,energia)
 
 
 
 #PARTE 4 (TASA DE ERROR)
 
-dem_ask2 = demodular_ask(tasa_de_bits,s_awgn)
-print(t_errores(dem_ask,dem_ask2))
+#dem_ask2 = demodular_ask(tasa_de_bits,s_awgn)
+#print(t_errores(dem_ask,dem_ask2))
 
 
 
@@ -203,13 +202,14 @@ s_emisor = bits_seudoAleatorios(100000)
 #niveles de ruido
 n_ruido = [1,2,4,8,10]
 errores = []
+
 for i in n_ruido:
 	modulada = modular_ask(s_emisor,tasa_de_bits)
-	transmitir = ruido(modulada,i)
+	en = energia(modulada)
+	print("energia: ",en)
+	transmitir = ruido(modulada,i,en)
 	demodulada = demodular_ask(tasa_de_bits,transmitir)
 	error = t_errores(s_emisor,demodulada)
 	errores.append(error)
 print(errores)
 print(n_ruido)
-
-
