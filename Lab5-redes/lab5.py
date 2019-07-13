@@ -8,32 +8,47 @@ import scipy.integrate as integrate
 
 #Modulación ASK
 
-def digitalPlot(s_digital,m_ask,dem_ask):
+def digitalPlot(s_digital,m_ask,dem_ask,validador):
 	'''
 	Entradas: Señal digita, modulación ask y demodulación ask
 	Descripción: Se crean tres gráficos de amplitud vs tiempo
 	Salida: Gráfico con los tres valores de entrada
 	'''
-	pyplot.subplot(3,1,1)
-	pyplot.title('Señal Digital entrada')
-	pyplot.ylabel('Amplitud')
+	if validador==1:
+		pyplot.subplot(3,1,1)
+		pyplot.title('Señal Digital entrada')
+		pyplot.ylabel('Amplitud')
 
-	pyplot.stem(s_digital)
-	pyplot.xlabel('Tiempo')
-	pyplot.ylim(-0.5,1.5)
-	pyplot.subplot(3,1,2)
-	pyplot.plot(m_ask)
-	pyplot.title('Señal modulada ask')
-	pyplot.xlabel('Tiempo')
-	pyplot.ylabel('Amplitud')
+		pyplot.stem(s_digital)
+		pyplot.xlabel('Tiempo')
+		pyplot.ylim(-0.5,1.5)
+		pyplot.subplot(3,1,2)
+		pyplot.plot(m_ask)
+		pyplot.title('Señal modulada ask')
+		pyplot.xlabel('Tiempo')
+		pyplot.ylabel('Amplitud')
 
 
-	pyplot.subplot(3,1,3)
-	pyplot.title('Señal demodulada ask')
-	pyplot.xlabel('Tiempo')
-	pyplot.ylabel('Amplitud')
-	pyplot.stem(dem_ask)
-	pyplot.show()
+		pyplot.subplot(3,1,3)
+		pyplot.title('Señal demodulada ask')
+		pyplot.xlabel('Tiempo')
+		pyplot.ylabel('Amplitud')
+		pyplot.stem(dem_ask)
+		pyplot.show()
+	else:
+		pyplot.subplot(2,1,1)
+		pyplot.plot(m_ask)
+		pyplot.title("Señal modulada ask con ruido (awgn)")
+		pyplot.ylabel('Amplitud')
+		pyplot.xlabel('Tiempo')
+		
+		pyplot.subplot(2,1,2)
+		pyplot.title('Señal demodulada ask con ruido (awgn)')
+		pyplot.xlabel('Tiempo')
+		pyplot.ylabel('Amplitud')
+		pyplot.stem(dem_ask)
+		pyplot.show()
+
 
 #***********************************************************************************************************************
 #***********************************************************************************************************************
@@ -127,10 +142,7 @@ def ruido(m_ask,snr,energia):
 	ruido = desviacion*np.random.normal(0,1,c_elementos)
 	s_awgn = m_ask + ruido
 	
-	pyplot.show()
-	pyplot.plot(s_awgn)
-	pyplot.title("Señal modulada ask con ruido (awgn)")
-	pyplot.show()
+	
 	return s_awgn
 
 #***********************************************************************************************************************
@@ -189,6 +201,11 @@ def energia(senal):
 	energia = integrate.simps(cuadrado,t)
 	return energia
 
+
+
+
+
+
 #***********************************************************************************************************************
 #***********************************************************************************************************************
 #***********************************************************************************************************************
@@ -209,7 +226,7 @@ m_ask = modular_ask(s_digital,tasa_de_bits)
 
 #PARTE 2: Demodulador digital
 dem_ask = demodular_ask(tasa_de_bits,m_ask)
-digitalPlot(s_digital, m_ask,dem_ask)
+digitalPlot(s_digital, m_ask,dem_ask,1)
 
 
 #PARTE 3: Simulador de canal tipo AWGN. Recibe como parámetro la razón de señal a ruido (SNR) y una señal modulada.
@@ -218,6 +235,8 @@ en = energia(m_ask)
 s_awgn = ruido(m_ask,4,en)
 demodulada = demodular_ask(tasa_de_bits,s_awgn)
 error = t_errores(s_digital,demodulada)
+digitalPlot(s_digital, s_awgn,demodulada,2)
+
 print("Energía de la señal: ",en,"\nSnr: 4\nTasa de errores de bits: ",error,"\n\n\n******************************************\n\n")
 
 
